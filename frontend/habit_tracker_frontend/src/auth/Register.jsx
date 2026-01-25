@@ -9,7 +9,7 @@ const Register = () => {
     middleName: "",
     lastName: "",
     username: "",
-    mobile: "",
+    mobileNumber: "",
     email: "",
     password: "",
     dob: ""
@@ -36,7 +36,7 @@ const Register = () => {
     if (formData.username.length < 4)
       err.username = "Username must be at least 4 characters";
 
-    if (!/^\d{10}$/.test(formData.mobile))
+    if (!/^\d{10}$/.test(formData.mobileNumber))
       err.mobile = "Mobile must be 10 digits";
 
     if (!/\S+@\S+\.\S+/.test(formData.email))
@@ -45,8 +45,8 @@ const Register = () => {
     if (formData.password.length < 6)
       err.password = "Password must be at least 6 characters";
 
-    if (!formData.dob)
-      err.dob = "Date of birth is required";
+    // if (!formData.dob)
+    //   err.dob = "Date of birth is required";
 
     setErrors(err);
     return Object.keys(err).length === 0;
@@ -60,26 +60,37 @@ const Register = () => {
 
   if (!validate()) return;
 
+  const payload = {
+    firstName: formData.firstName,
+    middleName: formData.middleName || null,
+    lastName: formData.lastName,
+    username: formData.username,
+    email: formData.email,
+    mobileNumber: formData.mobileNumber,   // ✅ FIXED
+    password: formData.password,
+    dob: formData.dob ? formData.dob : null 
+  };
+
   try {
-    await api.post("/auth/register", formData);
+    await api.post("/api/auth/signup", payload);
 
     setSuccessMsg("Registration successful! Please login.");
 
-    // optional: clear form
     setFormData({
       firstName: "",
       middleName: "",
       lastName: "",
       username: "",
-      mobile: "",
+      mobileNumber: "",
       email: "",
       password: "",
       dob: ""
     });
-
   } catch (error) {
-    if (error.response && error.response.data) {
-      setErrorMsg(error.response.data.message);
+    if (error.response?.data?.error) {
+      const firstError = Object.values(error.response.data.errors)[0][0];
+      setErrorMsg(firstError);
+      //setErrorMsg(error.response.data.error);
     } else {
       setErrorMsg("Registration failed. Try again later.");
     }
@@ -92,35 +103,79 @@ const Register = () => {
       <div className="auth-box">
         <h2>Create Account</h2>
 
-        {successMsg && <p className="success">{successMsg}</p>}
+        {/* {successMsg && <p className="success">{successMsg}</p>} */}
         {errorMsg && <p className="error">{errorMsg}</p>}
 
-        <form onSubmit={handleSubmit}>
-          <input name="firstName" placeholder="First Name" onChange={handleChange} />
-          <span className="error">{errors.firstName}</span>
+        {!successMsg && (
+    <form onSubmit={handleSubmit}>
+    <input
+      name="firstName"
+      placeholder="First Name"
+      value={formData.firstName}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.firstName}</span>
 
-          <input name="middleName" placeholder="Middle Name" onChange={handleChange} />
+    <input
+      name="middleName"
+      placeholder="Middle Name"
+      value={formData.middleName}
+      onChange={handleChange}
+    />
 
-          <input name="lastName" placeholder="Last Name" onChange={handleChange} />
-          <span className="error">{errors.lastName}</span>
+    <input
+      name="lastName"
+      placeholder="Last Name"
+      value={formData.lastName}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.lastName}</span>
 
-          <input name="username" placeholder="Username" onChange={handleChange} />
-          <span className="error">{errors.username}</span>
+    <input
+      name="username"
+      placeholder="Username"
+      value={formData.username}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.username}</span>
 
-          <input name="mobile" placeholder="Mobile Number" onChange={handleChange} />
-          <span className="error">{errors.mobile}</span>
+    <input
+      name="mobileNumber"
+      placeholder="Mobile Number"
+      value={formData.mobileNumber}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.mobile}</span>
 
-          <input name="email" placeholder="Email" onChange={handleChange} />
-          <span className="error">{errors.email}</span>
+    <input
+      name="email"
+      placeholder="Email"
+      value={formData.email}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.email}</span>
 
-          <input type="password" name="password" placeholder="Password" onChange={handleChange} />
-          <span className="error">{errors.password}</span>
+    <input
+      type="password"
+      name="password"
+      placeholder="Password"
+      value={formData.password}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.password}</span>
 
-          <input type="date" name="dob" onChange={handleChange} />
-          <span className="error">{errors.dob}</span>
+    <input
+      type="date"
+      name="dob"
+      value={formData.dob}
+      onChange={handleChange}
+    />
+    <span className="error">{errors.dob}</span>
 
-          <button type="submit">Register</button>
-        </form>
+    <button type="submit">Register</button>
+  </form>
+)}
+
 
         <p className="switch-auth">
           Already have an account? <a href="/login">Login</a>
