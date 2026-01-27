@@ -61,6 +61,8 @@ namespace Habit_Tracker_Backend.Models.Classes
 
         //// Navigation
         //public ICollection<Habit> Habits { get; set; } = new List<Habit>();
+        public ICollection<Habit> Habits { get; set; } = new List<Habit>();
+
         public ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
     }
 

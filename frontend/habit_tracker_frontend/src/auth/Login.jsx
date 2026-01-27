@@ -83,14 +83,17 @@ const Login = () => {
           <button type="submit">Login</button>
         </form>
 
-        <p className="switch-auth">
-          <Link to="/forgot-password">Forgot Password?</Link>
-        </p>
+        <div className="auth-footer">
+          <Link to="/forgot-password" className="forgot-link">
+            Forgot Password?
+          </Link>
 
-        <p className="switch">
-          Don’t have an account? 
-          <Link to="/register"> Register</Link>
-        </p>
+          <p>
+            Don’t have an account?
+            <Link to="/register"> Register</Link>
+          </p>
+        </div>
+
       </div>
     </div>
   );

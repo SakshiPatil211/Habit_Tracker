@@ -85,17 +85,33 @@ namespace Habit_Tracker_Backend
                     In = ParameterLocation.Header
                 });
 
+                //c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                //{
+                //    {
+                //        new OpenApiSecurityScheme
+                //        {
+                //            Type = SecuritySchemeType.Http,
+                //            Scheme = "bearer"
+                //        },
+                //        Array.Empty<string>()
+                //    }
+                //});
+
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
                         {
-                            Type = SecuritySchemeType.Http,
-                            Scheme = "bearer"
-                        },
-                        Array.Empty<string>()
-                    }
+                            Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
                 });
+
             });
 
             // --------------------------------------------------
@@ -124,6 +140,13 @@ namespace Habit_Tracker_Backend
             builder.Services.AddScoped<IOtpService, OtpService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
+
+            builder.Services.AddScoped<IHabitService, HabitService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+
+
 
 
             // --------------------------------------------------
@@ -180,9 +203,6 @@ namespace Habit_Tracker_Backend
             // MIDDLEWARE PIPELINE (ORDER MATTERS)
             // --------------------------------------------------
 
-            // Global exception handler (FIRST)
-            app.UseMiddleware<GlobalExceptionMiddleware>();
-
             // Rate limiting
             app.UseRateLimiter();
 
@@ -200,6 +220,8 @@ namespace Habit_Tracker_Backend
 
             // Auth
             app.UseAuthentication();
+            // Global exception handler (FIRST)
+            app.UseMiddleware<GlobalExceptionMiddleware>();
             app.UseAuthorization();
 
             // Controllers

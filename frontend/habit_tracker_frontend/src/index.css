@@ -1,3 +1,16 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  background: #f7f8fb;
+  overflow-x: hidden;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -65,4 +78,50 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* LAYOUT */
+.app-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 20px;
+}
+
+/* TITLE */
+.sidebar h2 {
+  margin-bottom: 30px;
+}
+
+/* NAV */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* LINKS */
+.sidebar a {
+  color: #cbd5f5;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.sidebar a.active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  /* background: #f7f8fb; */
+  overflow-x: hidden;
 }

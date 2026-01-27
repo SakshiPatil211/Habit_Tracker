@@ -13,11 +13,12 @@ namespace Habit_Tracker_Backend.Data
         public DbSet<UserOtp> UserOtps { get; set; } = null!;
 
         // ---------------- HABITS ----------------
-        //public DbSet<HabitCategory> HabitCategories { get; set; } = null!;
-        //public DbSet<Habit> Habits { get; set; } = null!;
-        //public DbSet<HabitSchedule> HabitSchedules { get; set; } = null!;
-        //public DbSet<HabitLog> HabitLogs { get; set; } = null!;
-        //public DbSet<HabitStreak> HabitStreaks { get; set; } = null!;
+        public DbSet<HabitCategory> HabitCategories { get; set; } = null!;
+        public DbSet<Habit> Habits { get; set; } = null!;
+        public DbSet<HabitSchedule> HabitSchedules { get; set; } = null!;
+        public DbSet<HabitStreak> HabitStreaks { get; set; } = null!;
+        public DbSet<HabitLog> HabitLogs { get; set; } = null!;
+       
         //public DbSet<HabitReminder> HabitReminders { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -36,6 +37,9 @@ namespace Habit_Tracker_Backend.Data
             modelBuilder.Entity<UserOtp>()
                 .Property(o => o.Channel)
                 .HasConversion<string>();
+
+            modelBuilder.Entity<HabitCategory>()
+                .HasKey(c => c.CategoryId);
 
             //modelBuilder.Entity<HabitLog>()
             //    .Property(h => h.Status)
@@ -58,12 +62,12 @@ namespace Habit_Tracker_Backend.Data
                 .HasForeignKey(o => o.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // User → Habits
-            //modelBuilder.Entity<Habit>()
-            //    .HasOne(h => h.User)
-            //    .WithMany(u => u.Habits)
-            //    .HasForeignKey(h => h.UserId)
-            //    .OnDelete(DeleteBehavior.Cascade);
+            //User → Habits
+            modelBuilder.Entity<Habit>()
+                .HasOne(h => h.User)
+                .WithMany(u => u.Habits)
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             //// Habit → Category
             //modelBuilder.Entity<Habit>()
@@ -71,6 +75,11 @@ namespace Habit_Tracker_Backend.Data
             //    .WithMany(c => c.Habits)
             //    .HasForeignKey(h => h.CategoryId)
             //    .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<Habit>()
+                .HasOne(h => h.Category)
+                .WithMany(c => c.Habits)
+                .HasForeignKey(h => h.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             //// Habit → Schedule
             //modelBuilder.Entity<HabitSchedule>()
@@ -78,20 +87,32 @@ namespace Habit_Tracker_Backend.Data
             //    .WithMany(h => h.Schedules)
             //    .HasForeignKey(s => s.HabitId)
             //    .OnDelete(DeleteBehavior.Cascade);
+            // Habit → Schedule
+            modelBuilder.Entity<HabitSchedule>()
+                .HasOne(s => s.Habit)
+                .WithMany(h => h.Schedules)
+                .HasForeignKey(s => s.HabitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
             //// Habit → Logs
-            //modelBuilder.Entity<HabitLog>()
-            //    .HasOne(l => l.Habit)
-            //    .WithMany(h => h.Logs)
-            //    .HasForeignKey(l => l.HabitId)
-            //    .OnDelete(DeleteBehavior.Cascade);
+            // Habit → Logs
+            modelBuilder.Entity<HabitLog>()
+                .HasOne(l => l.Habit)
+                .WithMany(h => h.HabitLogs)
+                .HasForeignKey(l => l.HabitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<HabitLog>()
+                .HasIndex(l => new { l.HabitId, l.LogDate })
+                .IsUnique();
 
             //// Habit → Streak (1:1)
-            //modelBuilder.Entity<HabitStreak>()
-            //    .HasOne(s => s.Habit)
-            //    .WithOne(h => h.Streak)
-            //    .HasForeignKey<HabitStreak>(s => s.HabitId)
-            //    .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<HabitStreak>()
+                .HasOne(s => s.Habit)
+                .WithOne(h => h.HabitStreak)
+                .HasForeignKey<HabitStreak>(s => s.HabitId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             //// Habit → Reminders
             //modelBuilder.Entity<HabitReminder>()
@@ -102,13 +123,13 @@ namespace Habit_Tracker_Backend.Data
 
             // ---------------- UNIQUE CONSTRAINTS ----------------
 
-            //modelBuilder.Entity<Habit>()
-            //    .HasIndex(h => new { h.UserId, h.HabitName })
-            //    .IsUnique();
+            modelBuilder.Entity<Habit>()
+                .HasIndex(h => new { h.UserId, h.HabitName })
+                .IsUnique();
 
-            //modelBuilder.Entity<HabitSchedule>()
-            //    .HasIndex(s => new { s.HabitId, s.DayOfWeek })
-            //    .IsUnique();
+            modelBuilder.Entity<HabitSchedule>()
+                .HasIndex(s => new { s.HabitId, s.DayOfWeek })
+                .IsUnique();
 
             //modelBuilder.Entity<HabitLog>()
             //    .HasIndex(l => new { l.HabitId, l.LogDate })
