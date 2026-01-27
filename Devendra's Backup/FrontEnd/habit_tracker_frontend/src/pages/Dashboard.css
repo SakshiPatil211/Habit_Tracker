@@ -1,0 +1,35 @@
+.dashboard {
+  padding: 20px;
+  color: #fff;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.category-card {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.category-card:hover {
+  background: #2a2a2a;
+}
+
+.habit-card {
+  background: #1e1e1e;
+  margin: 10px 0;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.error {
+  color: red;
+}
