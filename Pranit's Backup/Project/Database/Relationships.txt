@@ -1,0 +1,18 @@
+-----------------------------   Relationship Summary   ----------------------------
+
+				User → Habits → One-to-Many
+
+				User → OTPs → One-to-Many
+
+				Category → Habits → One-to-Many
+
+				Habit → Schedule Days → One-to-Many
+
+				Habit → Logs → One-to-Many
+
+				Habit → Streak → One-to-One
+
+				Habit → Reminder → One-to-One
+
+				Feedback → Independent table 
+--------------------------------------------------------------------------------------
