@@ -18,27 +18,38 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    if (!validate()) return;
+  if (!validate()) return;
 
-    try {
-      const response = await api.post("/auth/login", {
-        username,
-        password
-      });
+  try {
+    const response = await api.post("/api/auth/login", {
+      username,
+      password
+    });
 
-      localStorage.setItem("token", response.data.token);
-      navigate("/dashboard");
+    // backend response
+    const { token, username: name, role, userId, expiresAt } = response.data;
 
-    } catch (err) {
-      if (err.response && err.response.data) {
-        setError(err.response.data.message);
-      } else {
-        setError("Something went wrong. Try again later.");
-      }
+    // store everything
+    localStorage.setItem("token", token);
+    localStorage.setItem("username", name);
+    localStorage.setItem("role", role);
+    localStorage.setItem("userId", userId);
+    localStorage.setItem("expiresAt", expiresAt);
+
+    navigate("/dashboard");
+
+  } catch (err) {
+    if (err.response?.data?.message) {
+      setError(err.response.data.message);
+    } else {
+      setError("Invalid username or password");
     }
+  }
+};
+
 
     // ✅ HARDCODED LOGIN
     // if (username === "admin" && password === "admin123") {
@@ -47,7 +58,6 @@ const Login = () => {
     // } else {
     //     setError("Invalid username or password");
     // }
-  };
 
   return (
     <div className="auth-container">
@@ -73,14 +83,17 @@ const Login = () => {
           <button type="submit">Login</button>
         </form>
 
-        <p className="switch-auth">
-          <Link to="/forgot-password">Forgot Password?</Link>
-        </p>
+        <div className="auth-footer">
+          <Link to="/forgot-password" className="forgot-link">
+            Forgot Password?
+          </Link>
 
-        <p className="switch">
-          Don’t have an account? 
-          <Link to="/register"> Register</Link>
-        </p>
+          <p>
+            Don’t have an account?
+            <Link to="/register"> Register</Link>
+          </p>
+        </div>
+
       </div>
     </div>
   );
