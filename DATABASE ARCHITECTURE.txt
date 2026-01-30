@@ -1,0 +1,303 @@
+DATABASE ARCHITECTURE
+
+USERS
+ └── HABITS
+       ├── HABIT_CATEGORIES
+       ├── HABIT_SCHEDULE
+       ├── HABIT_LOG
+       ├── HABIT_STREAKS
+       └── HABIT_REMINDERS
+-----------------------------------------------------------------------------------------
+Table 1: users (Login & Registration)
+
+CREATE TABLE users (
+    user_id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+    first_name     VARCHAR(50) NOT NULL,
+    middle_name    VARCHAR(50),
+    last_name      VARCHAR(50) NOT NULL,
+
+    username       VARCHAR(50) UNIQUE NOT NULL,
+    email          VARCHAR(100) UNIQUE,
+    mobile_number  VARCHAR(15) UNIQUE,
+
+    password_hash  VARCHAR(255) NOT NULL,
+    dob            DATE,
+
+    is_active            BOOLEAN DEFAULT TRUE,
+    is_mobile_verified   BOOLEAN DEFAULT FALSE,
+    mobile_verified_at   TIMESTAMP NULL,
+
+    last_login     TIMESTAMP NULL,
+    role           ENUM('USER','ADMIN') DEFAULT 'USER',
+
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Purpose
+
+✔ Login
+✔ Registration
+✔ User profile
+-----------------------------------------------------------------------------------------
+TABLE 2: habit_categories (Category Master)
+
+CREATE TABLE habit_categories (
+    category_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    category_name VARCHAR(50) UNIQUE NOT NULL,
+    description   VARCHAR(255)
+);
+
+category_name
+Health
+Fitness
+Study
+Productivity
+Mindfulness
+-----------------------------------------------------------------------------------------
+Table 3: habits (Habits per User)
+
+CREATE TABLE habits (
+    habit_id      BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id       BIGINT NOT NULL,
+    category_id   BIGINT,
+    habit_name    VARCHAR(100) NOT NULL,
+    description   VARCHAR(255),
+    start_date    DATE NOT NULL,
+    end_date      DATE,
+    is_active     BOOLEAN DEFAULT TRUE,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_user_habit UNIQUE (user_id, habit_name),
+
+    CONSTRAINT fk_habits_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_habits_category FOREIGN KEY (category_id)
+        REFERENCES habit_categories(category_id)
+);
+-----------------------------------------------------------------------------------------
+Table 4: habit_schedule (Which Days to Follow)
+
+CREATE TABLE habit_schedule (
+    schedule_id  BIGINT PRIMARY KEY AUTO_INCREMENT,
+    habit_id     BIGINT NOT NULL,
+    day_of_week  ENUM('MON','TUE','WED','THU','FRI','SAT','SUN') NOT NULL,
+
+    CONSTRAINT uq_habit_day UNIQUE (habit_id, day_of_week),
+
+    CONSTRAINT fk_schedule_habit FOREIGN KEY (habit_id)
+        REFERENCES habits(habit_id)
+        ON DELETE CASCADE
+);
+
+-----------------------------------------------------------------------------------------
+Table 5: habit_log (Daily Tracking)
+
+CREATE TABLE habit_log (
+    log_id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+    habit_id      BIGINT NOT NULL,
+    log_date      DATE NOT NULL,
+    status        ENUM('DONE','SKIPPED','PARTIAL') NOT NULL,
+    remarks       VARCHAR(255),
+
+    CONSTRAINT uq_habit_log UNIQUE (habit_id, log_date),
+
+    CONSTRAINT fk_log_habit FOREIGN KEY (habit_id)
+        REFERENCES habits(habit_id)
+        ON DELETE CASCADE
+);
+
+
+Scenario:
+
+	User selects:
+
+	Habit: Morning Walk
+
+	Days: MON, TUE, WED, THU, FRI
+
+Flow:
+
+	Frontend checks today’s day (e.g., MON)
+
+	If MON exists in habit_schedule
+
+	Show checkbox → Done / Missed
+
+	Save entry in habit_log
+
+-----------------------------------------------------------------------------------------
+TABLE 6: habit_streaks
+
+CREATE TABLE habit_streaks (
+    streak_id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+    habit_id         BIGINT NOT NULL,
+    current_streak   INT DEFAULT 0,
+    longest_streak   INT DEFAULT 0,
+    last_completed   DATE,
+
+    CONSTRAINT uq_streak_habit UNIQUE (habit_id),
+
+    CONSTRAINT fk_streak_habit FOREIGN KEY (habit_id)
+        REFERENCES habits(habit_id)
+        ON DELETE CASCADE
+);
+
+
+How It Works
+
+Updated whenever habit_log is inserted
+
+Avoids heavy queries on large data
+-----------------------------------------------------------------------------------------
+TABLE 7: habit_reminders (Notifications / Alerts)
+
+CREATE TABLE habit_reminders (
+    reminder_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    habit_id      BIGINT NOT NULL,
+    reminder_time TIME NOT NULL,
+    reminder_type ENUM('EMAIL','PUSH','SMS') DEFAULT 'PUSH',
+    is_enabled    BOOLEAN DEFAULT TRUE,
+
+    CONSTRAINT fk_reminder_habit FOREIGN KEY (habit_id)
+        REFERENCES habits(habit_id)
+        ON DELETE CASCADE
+);
+
+--------Optional-----------------------------------------------
+CREATE INDEX idx_habits_user ON habits(user_id);
+CREATE INDEX idx_schedule_habit ON habit_schedule(habit_id);
+CREATE INDEX idx_log_date ON habit_log(log_date);
+---------------------------------------------------------------
+
+Habit	Time	Type
+Morning Walk	06:00	PUSH
+Reading	21:00	EMAIL
+-----------------------------------------------------------------------------------------
+TABLE 8: habit_questions
+
+CREATE TABLE habit_questions (
+    question_id    BIGINT PRIMARY KEY AUTO_INCREMENT,
+    habit_id       BIGINT NOT NULL,
+    question_text  VARCHAR(255) NOT NULL,
+    is_active      BOOLEAN DEFAULT TRUE,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_question_habit FOREIGN KEY (habit_id)
+        REFERENCES habits(habit_id)
+        ON DELETE CASCADE
+);
+
+habit		question
+Morning Walk	Did you walk for at least 20 minutes?
+Morning Walk	Did you walk before 8 AM?
+-----------------------------------------------------------------------------------------
+TABLE 9: user_habit_questions (Enable / Disable per User)
+
+CREATE TABLE user_habit_questions (
+    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id      BIGINT NOT NULL,
+    question_id  BIGINT NOT NULL,
+    is_enabled   BOOLEAN DEFAULT TRUE,
+
+    CONSTRAINT uq_user_question UNIQUE (user_id, question_id),
+
+    CONSTRAINT fk_uq_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_uq_question FOREIGN KEY (question_id)
+        REFERENCES habit_questions(question_id)
+        ON DELETE CASCADE
+);
+
+-- Indexes
+CREATE INDEX idx_uhq_user
+ON user_habit_questions(user_id);
+
+CREATE INDEX idx_uhq_user_enabled
+ON user_habit_questions(user_id, is_enabled);
+
+CREATE INDEX idx_uhq_question
+ON user_habit_questions(question_id);
+-----------------------------------------------------------------------------------------
+TABLE 10: habit_question_answers (Daily Yes/No)
+
+CREATE TABLE habit_question_answers (
+    answer_id    BIGINT PRIMARY KEY AUTO_INCREMENT,
+    question_id  BIGINT NOT NULL,
+    habit_id     BIGINT NOT NULL,
+    user_id      BIGINT NOT NULL,
+    answer_date  DATE NOT NULL,
+    answer       ENUM('YES','NO') NOT NULL,
+
+    -- Correct uniqueness for multi-user system
+    CONSTRAINT uq_daily_answer 
+        UNIQUE (user_id, question_id, answer_date),
+
+    CONSTRAINT fk_ans_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_ans_habit FOREIGN KEY (habit_id)
+        REFERENCES habits(habit_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_ans_question FOREIGN KEY (question_id)
+        REFERENCES habit_questions(question_id)
+        ON DELETE CASCADE
+);
+
+-- Indexes for performance
+CREATE INDEX idx_hqa_user_date
+ON habit_question_answers(user_id, answer_date);
+
+CREATE INDEX idx_hqa_habit_date
+ON habit_question_answers(habit_id, answer_date);
+
+-----------------------------------------------------------------------------------------
+
+CREATE TABLE user_otp (
+    otp_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+
+    user_id BIGINT NOT NULL,
+
+    otp_code_hash VARCHAR(255) NOT NULL,
+
+    otp_type ENUM (
+        'PASSWORD_RESET',
+        'LOGIN',
+        'VERIFY_MOBILE'
+    ) NOT NULL,
+
+    channel ENUM (
+        'EMAIL',
+        'SMS'
+    ) NOT NULL,
+
+    expires_at TIMESTAMP NOT NULL,
+
+    is_used BOOLEAN DEFAULT FALSE,
+
+    attempts INT DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user_otp_v2_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_uotp_user
+ON user_otp(user_id);
+
+CREATE INDEX idx_uotp_active
+ON user_otp(user_id, otp_type, is_used);
+
+CREATE INDEX idx_uotp_expiry
+ON user_otp(expires_at);
+
+
