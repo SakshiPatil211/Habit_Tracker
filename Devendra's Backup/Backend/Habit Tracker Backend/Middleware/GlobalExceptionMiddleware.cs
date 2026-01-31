@@ -1,4 +1,4 @@
-﻿using Habit_Tracker_Backend.Exceptions;
+using Habit_Tracker_Backend.Exceptions;
 using System.Text.Json;
 
 namespace Habit_Tracker_Backend.Middleware
@@ -36,6 +36,61 @@ namespace Habit_Tracker_Backend.Middleware
                 {
                     success = false,
                     error = ex.Message
+                }));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    error = ex.Message
+                }));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    error = string.IsNullOrEmpty(ex.Message) ? "Resource not found." : ex.Message
+                }));
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                _logger.LogWarning(ex, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    error = string.IsNullOrEmpty(ex.Message) ? "Invalid request." : ex.Message
+                }));
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    error = string.IsNullOrEmpty(ex.Message) ? "Invalid request." : ex.Message
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    error = string.IsNullOrEmpty(ex.Message) ? "Invalid operation." : ex.Message
                 }));
             }
             catch (Exception ex)

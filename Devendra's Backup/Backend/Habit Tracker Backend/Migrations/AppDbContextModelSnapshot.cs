@@ -22,6 +22,49 @@ namespace Habit_Tracker_Backend.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.Feedback", b =>
+                {
+                    b.Property<long>("FeedbackId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("feedback_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("FeedbackId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int")
+                        .HasColumnName("rating");
+
+                    b.HasKey("FeedbackId");
+
+                    b.ToTable("feedback");
+                });
+
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.Habit", b =>
                 {
                     b.Property<long>("HabitId")
@@ -39,14 +82,19 @@ namespace Habit_Tracker_Backend.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
 
-                    b.Property<DateOnly?>("EndDate")
-                        .HasColumnType("date")
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("end_date");
 
                     b.Property<string>("HabitName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("varchar(150)")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("habit_name");
 
                     b.Property<bool>("IsActive")
@@ -54,12 +102,12 @@ namespace Habit_Tracker_Backend.Migrations
                         .HasColumnName("is_active");
 
                     b.Property<string>("Priority")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .IsRequired()
+                        .HasColumnType("longtext")
                         .HasColumnName("priority");
 
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("start_date");
 
                     b.Property<long>("UserId")
@@ -73,7 +121,7 @@ namespace Habit_Tracker_Backend.Migrations
                     b.HasIndex("UserId", "HabitName")
                         .IsUnique();
 
-                    b.ToTable("HABITS");
+                    b.ToTable("habits");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitCategory", b =>
@@ -95,13 +143,18 @@ namespace Habit_Tracker_Backend.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("description");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("HABIT_CATEGORIES");
+                    b.ToTable("habit_categories");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitLog", b =>
@@ -117,8 +170,8 @@ namespace Habit_Tracker_Backend.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("habit_id");
 
-                    b.Property<DateOnly>("LogDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime>("LogDate")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("log_date");
 
                     b.Property<string>("Remarks")
@@ -128,8 +181,7 @@ namespace Habit_Tracker_Backend.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("longtext")
                         .HasColumnName("status");
 
                     b.HasKey("LogId");
@@ -137,7 +189,7 @@ namespace Habit_Tracker_Backend.Migrations
                     b.HasIndex("HabitId", "LogDate")
                         .IsUnique();
 
-                    b.ToTable("HABIT_LOG");
+                    b.ToTable("habit_log");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitReminder", b =>
@@ -163,9 +215,10 @@ namespace Habit_Tracker_Backend.Migrations
 
                     b.HasKey("ReminderId");
 
-                    b.HasIndex("HabitId");
+                    b.HasIndex("HabitId")
+                        .IsUnique();
 
-                    b.ToTable("HABIT_REMINDER");
+                    b.ToTable("habit_reminder");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitSchedule", b =>
@@ -177,9 +230,9 @@ namespace Habit_Tracker_Backend.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("ScheduleId"));
 
-                    b.Property<string>("DayOfWeek")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
+                    b.Property<string>("HabitDayOfWeek")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
                         .HasColumnName("day_of_week");
 
                     b.Property<long>("HabitId")
@@ -188,10 +241,10 @@ namespace Habit_Tracker_Backend.Migrations
 
                     b.HasKey("ScheduleId");
 
-                    b.HasIndex("HabitId", "DayOfWeek")
+                    b.HasIndex("HabitId", "HabitDayOfWeek")
                         .IsUnique();
 
-                    b.ToTable("HABIT_SCHEDULE");
+                    b.ToTable("habit_schedule");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitStreak", b =>
@@ -211,8 +264,8 @@ namespace Habit_Tracker_Backend.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("habit_id");
 
-                    b.Property<DateOnly?>("LastCompletedDate")
-                        .HasColumnType("date")
+                    b.Property<DateTime?>("LastCompletedDate")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("last_completed_date");
 
                     b.Property<int>("LongestStreak")
@@ -224,7 +277,7 @@ namespace Habit_Tracker_Backend.Migrations
                     b.HasIndex("HabitId")
                         .IsUnique();
 
-                    b.ToTable("HABIT_STREAKS");
+                    b.ToTable("habit_streaks");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.User", b =>
@@ -253,6 +306,10 @@ namespace Habit_Tracker_Backend.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("email");
 
+                    b.Property<bool>("EmailNotificationsEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("email_notifications_enabled");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -262,6 +319,10 @@ namespace Habit_Tracker_Backend.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_email_verified");
 
                     b.Property<bool>("IsMobileVerified")
                         .HasColumnType("tinyint(1)")
@@ -309,7 +370,7 @@ namespace Habit_Tracker_Backend.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("USERS");
+                    b.ToTable("users");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.UserOtp", b =>
@@ -366,7 +427,7 @@ namespace Habit_Tracker_Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("USER_OTP");
+                    b.ToTable("user_otp");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.Habit", b =>
@@ -377,48 +438,40 @@ namespace Habit_Tracker_Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Habit_Tracker_Backend.Models.Classes.User", "User")
-                        .WithMany("Habits")
+                    b.HasOne("Habit_Tracker_Backend.Models.Classes.User", null)
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("HabitCategory");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitLog", b =>
                 {
-                    b.HasOne("Habit_Tracker_Backend.Models.Classes.Habit", "Habit")
+                    b.HasOne("Habit_Tracker_Backend.Models.Classes.Habit", null)
                         .WithMany("HabitLogs")
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Habit");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitReminder", b =>
                 {
-                    b.HasOne("Habit_Tracker_Backend.Models.Classes.Habit", "Habit")
-                        .WithMany("HabitReminders")
-                        .HasForeignKey("HabitId")
+                    b.HasOne("Habit_Tracker_Backend.Models.Classes.Habit", null)
+                        .WithOne("HabitReminder")
+                        .HasForeignKey("Habit_Tracker_Backend.Models.Classes.HabitReminder", "HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Habit");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitSchedule", b =>
                 {
-                    b.HasOne("Habit_Tracker_Backend.Models.Classes.Habit", "Habit")
+                    b.HasOne("Habit_Tracker_Backend.Models.Classes.Habit", null)
                         .WithMany("HabitSchedules")
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Habit");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitStreak", b =>
@@ -447,12 +500,11 @@ namespace Habit_Tracker_Backend.Migrations
                 {
                     b.Navigation("HabitLogs");
 
-                    b.Navigation("HabitReminders");
+                    b.Navigation("HabitReminder");
 
                     b.Navigation("HabitSchedules");
 
-                    b.Navigation("HabitStreak")
-                        .IsRequired();
+                    b.Navigation("HabitStreak");
                 });
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.HabitCategory", b =>
@@ -462,8 +514,6 @@ namespace Habit_Tracker_Backend.Migrations
 
             modelBuilder.Entity("Habit_Tracker_Backend.Models.Classes.User", b =>
                 {
-                    b.Navigation("Habits");
-
                     b.Navigation("UserOtps");
                 });
 #pragma warning restore 612, 618

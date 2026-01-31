@@ -53,9 +53,23 @@ namespace Habit_Tracker_Backend.Services.Implementations
             await _context.SaveChangesAsync();
 
             // 4️⃣ Send OTP (Email for now)
+            //if (channel == OtpChannel.EMAIL)
+            //{
+            //    await _emailService.SendOtpAsync(user.Email, otp);
+            //}
             if (channel == OtpChannel.EMAIL)
             {
-                await _emailService.SendOtpAsync(user.Email, otp);
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _emailService.SendOtpAsync(user.Email, otp);
+                    }
+                    catch (EmailSendFailedException)
+                    {
+                        
+                    }
+                });
             }
         }
 

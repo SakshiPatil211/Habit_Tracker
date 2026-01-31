@@ -1,11 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Habit_Tracker_Backend.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Habit_Tracker_Backend.Models.Enums;
-
 
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("HABIT_LOG")]
+    [Table("habit_log")]
     public class HabitLog
     {
         [Key]
@@ -20,16 +19,14 @@ namespace Habit_Tracker_Backend.Models.Classes
         [Column("log_date")]
         public DateOnly LogDate { get; set; }
 
-        [MaxLength(50)]
+        [Required]
         [Column("status")]
         public HabitLogStatus Status { get; set; }
 
         [MaxLength(255)]
         [Column("remarks")]
         public string? Remarks { get; set; }
-
-        // Navigation
-        [ForeignKey(nameof(HabitId))]
-        public Habit Habit { get; set; } = null!;
+        //[ForeignKey(nameof(HabitId))]
+        //public Habit? Habit { get; set; }
     }
 }

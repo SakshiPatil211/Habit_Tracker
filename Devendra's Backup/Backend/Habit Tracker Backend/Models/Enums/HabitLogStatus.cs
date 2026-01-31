@@ -2,8 +2,9 @@
 {
     public enum HabitLogStatus
     {
-        COMPLETED,
-        MISSED,
+        PENDING,
+        DONE,
         SKIPPED
     }
+
 }

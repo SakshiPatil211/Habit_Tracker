@@ -1,4 +1,4 @@
-﻿using Habit_Tracker_Backend.DTOs;
+using Habit_Tracker_Backend.DTOs;
 using Habit_Tracker_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,25 +18,12 @@ namespace Habit_Tracker_Backend.Controllers
             _authService = authService;
         }
 
-
-        [HttpPost("register")]
+        [HttpPost("signup")]
         [AllowAnonymous]
-        public async Task<IActionResult> Signup([FromBody] RegisterDto dto)
+        public async Task<IActionResult> Signup(RegisterDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             return Ok(await _authService.RegisterAsync(dto));
         }
-
-
-
-        //[HttpPost("register")]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> Signup(RegisterDto dto)
-        //{
-        //    return Ok(await _authService.RegisterAsync(dto));
-        //}
 
         [EnableRateLimiting("login-limiter")]
         [HttpPost("login")]
@@ -66,12 +53,26 @@ namespace Habit_Tracker_Backend.Controllers
         [Authorize]
         public IActionResult Logout()
         {
-            // Stateless JWT logout
-            // Client must delete the token
             return Ok(new
             {
                 message = "Logged out successfully"
             });
+        }
+
+        [EnableRateLimiting("otp-limiter")]
+        [HttpPost("send-verification-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SendVerificationEmail([FromBody] ForgotPasswordDto dto)
+        {
+            return Ok(await _authService.SendVerificationEmailAsync(dto.Email));
+        }
+
+        [EnableRateLimiting("otp-limiter")]
+        [HttpPost("verify-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmail(VerifyEmailDto dto)
+        {
+            return Ok(await _authService.VerifyEmailAsync(dto));
         }
     }
 }

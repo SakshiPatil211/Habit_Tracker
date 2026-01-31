@@ -1,8 +1,8 @@
-﻿using Habit_Tracker_Backend.Configurations;
+using Habit_Tracker_Backend.Configurations;
 using Habit_Tracker_Backend.Data;
 using Habit_Tracker_Backend.Middleware;
-using Habit_Tracker_Backend.Services.Interfaces;
 using Habit_Tracker_Backend.Services.Implementations;
+using Habit_Tracker_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,6 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
-
 
 namespace Habit_Tracker_Backend
 {
@@ -45,12 +44,19 @@ namespace Habit_Tracker_Backend
             // CONTROLLERS & JSON
             // --------------------------------------------------
             builder.Services.AddControllers()
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.ReferenceHandler =
-                        ReferenceHandler.IgnoreCycles;
-                });
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            ReferenceHandler.IgnoreCycles;
 
+        options.JsonSerializerOptions.PropertyNamingPolicy =
+            System.Text.Json.JsonNamingPolicy.CamelCase;
+
+        // ✅ THIS LINE FIXES YOUR ISSUE
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+    });
             // --------------------------------------------------
             // SWAGGER
             // --------------------------------------------------
@@ -111,11 +117,14 @@ namespace Habit_Tracker_Backend
             builder.Services.AddScoped<IOtpService, OtpService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<IHabitService, HabitService>();
-            builder.Services.AddScoped<IHabitCategoryService, HabitCategoryService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IHabitLogService, HabitLogService>();
-
-
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IReminderService, ReminderService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddHostedService<ReminderBackgroundService>();
 
 
             // --------------------------------------------------
@@ -143,6 +152,30 @@ namespace Habit_Tracker_Backend
             builder.Services.AddAuthorization();
 
             // --------------------------------------------------
+            // CORS POLICY
+            // --------------------------------------------------
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins(
+                        "http://localhost:5173" // Vite default
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                    //.AllowCredentials();
+                });
+
+                // For development: Allow all origins
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            // --------------------------------------------------
             // RATE LIMITING
             // --------------------------------------------------
             builder.Services.AddRateLimiter(options =>
@@ -166,29 +199,17 @@ namespace Habit_Tracker_Backend
                 });
             });
 
-            // --------------------------------------------------
-            // CORS Service
-            // --------------------------------------------------
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowFrontend", policy =>
-                {
-                    policy
-                        .WithOrigins("http://localhost:5173") // React app
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                });
-            });
-
             var app = builder.Build();
 
             // --------------------------------------------------
             // MIDDLEWARE PIPELINE (ORDER MATTERS)
             // --------------------------------------------------
-
+            app.UseRouting();
             // Global exception handler (FIRST)
             app.UseMiddleware<GlobalExceptionMiddleware>();
+
+            // CORS (must be before Authentication/Authorization)
+            app.UseCors("AllowFrontend");  // Use "AllowAll" for dev if needed
 
             // Rate limiting
             app.UseRateLimiter();
@@ -201,12 +222,7 @@ namespace Habit_Tracker_Backend
             }
 
             // Security
-            //app.UseHttpsRedirection();
-
-            //app.UseRouting();
-
-            // CORS
-            app.UseCors("AllowFrontend");
+            app.UseHttpsRedirection();
 
             // Auth
             app.UseAuthentication();
@@ -219,6 +235,17 @@ namespace Habit_Tracker_Backend
                 status = "Habit Tracker API running",
                 time = DateTime.UtcNow
             });
+
+            // --------------------------------------------------
+            //MIGRATION RUNNER (PRODUCTION ONLY)
+            // --------------------------------------------------
+            if (!app.Environment.IsDevelopment())
+            {
+                using var scope = app.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
+            }
+
             // --------------------------------------------------
             // RUN APPLICATION
             // --------------------------------------------------

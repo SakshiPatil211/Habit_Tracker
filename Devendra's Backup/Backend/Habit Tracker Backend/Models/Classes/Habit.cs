@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("HABITS")]
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+    using Habit_Tracker_Backend.Models.Enums;
+
+    [Table("habits")]
     public class Habit
     {
         [Key]
@@ -20,36 +19,45 @@ namespace Habit_Tracker_Backend.Models.Classes
         [Column("category_id")]
         public long CategoryId { get; set; }
 
-        [Required, MaxLength(150)]
+        [Required]
+        [MaxLength(100)]
         [Column("habit_name")]
         public string HabitName { get; set; } = null!;
 
+        [MaxLength(255)]
+        [Column("description")]
+        public string? Description { get; set; }
+
+        [Required]
         [Column("start_date")]
-        public DateOnly StartDate { get; set; }
+        public DateTime StartDate { get; set; }
 
         [Column("end_date")]
-        public DateOnly? EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
 
-        [MaxLength(50)]
+        [Required]
         [Column("priority")]
-        public string? Priority { get; set; }
+        public HabitPriority Priority { get; set; } = HabitPriority.MEDIUM;
 
+        [Required]
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
+        [Required]
         [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation
-        [ForeignKey(nameof(UserId))]
-        public User User { get; set; } = null!;
-
-        [ForeignKey(nameof(CategoryId))]
         public HabitCategory HabitCategory { get; set; } = null!;
 
-        public ICollection<HabitLog> HabitLogs { get; set; } = new List<HabitLog>();
-        public ICollection<HabitReminder> HabitReminders { get; set; } = new List<HabitReminder>();
-        public ICollection<HabitSchedule> HabitSchedules { get; set; } = new List<HabitSchedule>();
-        public HabitStreak HabitStreak { get; set; } = null!;
+        public ICollection<HabitSchedule> HabitSchedules { get; set; }
+            = new List<HabitSchedule>();
+
+        public ICollection<HabitLog> HabitLogs { get; set; }
+            = new List<HabitLog>();
+
+        public HabitStreak? HabitStreak { get; set; }
+
+        public HabitReminder? HabitReminder { get; set; }
     }
+
 }

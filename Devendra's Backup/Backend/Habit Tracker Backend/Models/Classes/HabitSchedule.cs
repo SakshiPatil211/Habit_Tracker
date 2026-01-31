@@ -1,9 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Habit_Tracker_Backend.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("HABIT_SCHEDULE")]
+    [Table("habit_schedule")]
     public class HabitSchedule
     {
         [Key]
@@ -14,12 +15,10 @@ namespace Habit_Tracker_Backend.Models.Classes
         [Column("habit_id")]
         public long HabitId { get; set; }
 
-        [MaxLength(10)]
+        [Required]
         [Column("day_of_week")]
-        public string? DayOfWeek { get; set; }
-
-        // Navigation
-        [ForeignKey(nameof(HabitId))]
-        public Habit Habit { get; set; } = null!;
+        public HabitDayOfWeek HabitDayOfWeek { get; set; }
+        //[ForeignKey(nameof(HabitId))]
+        //public Habit? Habit { get; set; } 
     }
 }

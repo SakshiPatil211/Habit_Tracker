@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("USER_OTP")]
+    [Table("user_otp")]
     [Index(nameof(UserId))]
     [Index(nameof(ExpiresAt))]
     public class UserOtp

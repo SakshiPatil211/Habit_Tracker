@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("HABIT_STREAKS")]
+    [Table("habit_streaks")]
     public class HabitStreak
     {
         [Key]
@@ -14,17 +14,18 @@ namespace Habit_Tracker_Backend.Models.Classes
         [Column("habit_id")]
         public long HabitId { get; set; }
 
+        [Required]
         [Column("current_streak")]
-        public int CurrentStreak { get; set; } = 0;
+        public int CurrentStreak { get; set; } = 0;  
 
+        [Required]
         [Column("longest_streak")]
-        public int LongestStreak { get; set; } = 0;
+        public int LongestStreak { get; set; } = 0;   
 
         [Column("last_completed_date")]
         public DateOnly? LastCompletedDate { get; set; }
 
-        // Navigation
         [ForeignKey(nameof(HabitId))]
-        public Habit Habit { get; set; } = null!;
+        public Habit? Habit { get; set; }
     }
 }

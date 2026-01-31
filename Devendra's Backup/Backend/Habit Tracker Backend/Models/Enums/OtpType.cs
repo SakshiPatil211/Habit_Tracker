@@ -1,7 +1,8 @@
-﻿namespace Habit_Tracker_Backend.Models.Enums
+namespace Habit_Tracker_Backend.Models.Enums
 {
     public enum OtpType
     {
-        FORGOT_PASSWORD
+        FORGOT_PASSWORD,
+        EMAIL_VERIFICATION
     }
 }

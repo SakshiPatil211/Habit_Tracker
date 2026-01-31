@@ -1,4 +1,4 @@
-﻿using Habit_Tracker_Backend.Configurations;
+using Habit_Tracker_Backend.Configurations;
 using Habit_Tracker_Backend.Data;
 using Habit_Tracker_Backend.DTOs;
 using Habit_Tracker_Backend.Exceptions;
@@ -35,7 +35,7 @@ namespace Habit_Tracker_Backend.Services.Implementations
             if (await _context.Users.AnyAsync(u =>
                 u.Username == dto.Username || u.Email == dto.Email))
             {
-                throw new BadRequestException("Username or email already exists");
+                throw new BadRequestException("Account already exists");
             }
 
             var user = new User
@@ -50,16 +50,24 @@ namespace Habit_Tracker_Backend.Services.Implementations
                 Dob = dto.Dob,
                 Role = Role.USER,
                 IsActive = true,
-                IsMobileVerified = false
+                IsMobileVerified = false,
+                IsEmailVerified = false
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            // Send verification email after registration
+            await _otpService.SendOtpAsync(
+                user,
+                OtpType.EMAIL_VERIFICATION,
+                OtpChannel.EMAIL
+            );
+
             return new AuthResponseDto
             {
                 Success = true,
-                Message = "Registration successful"
+                Message = "Registration successful. Please verify your email."
             };
         }
 
@@ -84,7 +92,16 @@ namespace Habit_Tracker_Backend.Services.Implementations
                 Username = user.Username,
                 Role = user.Role.ToString(),
                 Token = _jwtService.GenerateToken(user),
-                ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiresInMinutes)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiresInMinutes),
+                User = new DTOs.LoginUserDto
+                {
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    Role = user.Role.ToString(),
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email
+                }
             };
         }
 
@@ -104,7 +121,7 @@ namespace Habit_Tracker_Backend.Services.Implementations
                 };
             }
 
-            // Invalidate old OTPs (DO NOT DELETE)
+            // Invalidate old OTPs 
             var oldOtps = await _context.UserOtps
                 .Where(o => o.UserId == user.UserId && !o.IsUsed)
                 .ToListAsync();
@@ -151,6 +168,91 @@ namespace Habit_Tracker_Backend.Services.Implementations
             {
                 Success = true,
                 Message = "Password reset successful"
+            };
+        }
+
+        // ---------------- SEND VERIFICATION EMAIL ----------------
+        public async Task<AuthResponseDto> SendVerificationEmailAsync(string email)
+        {
+            var user = await _context.Users
+                .SingleOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                return new AuthResponseDto
+                {
+                    Success = true,
+                    Message = "If the account exists, a verification email has been sent"
+                };
+            }
+
+            if (user.IsEmailVerified)
+            {
+                return new AuthResponseDto
+                {
+                    Success = true,
+                    Message = "Email is already verified"
+                };
+            }
+
+            // Invalidate old verification OTPs
+            var oldOtps = await _context.UserOtps
+                .Where(o => o.UserId == user.UserId &&
+                           o.OtpType == OtpType.EMAIL_VERIFICATION &&
+                           !o.IsUsed)
+                .ToListAsync();
+
+            foreach (var otp in oldOtps)
+            {
+                otp.IsUsed = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Send verification OTP
+            await _otpService.SendOtpAsync(
+                user,
+                OtpType.EMAIL_VERIFICATION,
+                OtpChannel.EMAIL
+            );
+
+            return new AuthResponseDto
+            {
+                Success = true,
+                Message = "Verification email sent"
+            };
+        }
+
+        // ---------------- VERIFY EMAIL ----------------
+        public async Task<AuthResponseDto> VerifyEmailAsync(VerifyEmailDto dto)
+        {
+            var user = await _context.Users
+                .SingleOrDefaultAsync(u => u.Email == dto.Email);
+
+            if (user == null)
+                throw new BadRequestException("Invalid request");
+
+            if (user.IsEmailVerified)
+            {
+                return new AuthResponseDto
+                {
+                    Success = true,
+                    Message = "Email is already verified"
+                };
+            }
+
+            await _otpService.ValidateOtpAsync(
+                user.UserId,
+                dto.Otp,
+                OtpType.EMAIL_VERIFICATION);
+
+            user.IsEmailVerified = true;
+            await _context.SaveChangesAsync();
+
+            return new AuthResponseDto
+            {
+                Success = true,
+                Message = "Email verified successfully"
             };
         }
     }

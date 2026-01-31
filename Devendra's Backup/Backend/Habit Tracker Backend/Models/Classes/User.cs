@@ -1,11 +1,11 @@
-﻿using Habit_Tracker_Backend.Models.Enums;
+using Habit_Tracker_Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("USERS")]
+    [Table("users")]
     [Index(nameof(Username), IsUnique = true)]
     [Index(nameof(Email), IsUnique = true)]
     public class User
@@ -51,6 +51,9 @@ namespace Habit_Tracker_Backend.Models.Classes
         [Column("is_mobile_verified")]
         public bool IsMobileVerified { get; set; }
 
+        [Column("is_email_verified")]
+        public bool IsEmailVerified { get; set; }
+
         [Required]
         [Column("role")]
         public Role Role { get; set; }
@@ -59,8 +62,11 @@ namespace Habit_Tracker_Backend.Models.Classes
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedAt { get; set; }
 
+        [Column("email_notifications_enabled")]
+        public bool EmailNotificationsEnabled { get; set; } = true;
+
         //// Navigation
-        public ICollection<Habit> Habits { get; set; } = new List<Habit>();
+        //public ICollection<Habit> Habits { get; set; } = new List<Habit>();
         public ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
     }
 

@@ -1,4 +1,4 @@
-﻿using Habit_Tracker_Backend.DTOs;
+using Habit_Tracker_Backend.DTOs;
 
 namespace Habit_Tracker_Backend.Services.Interfaces
 {
@@ -8,5 +8,7 @@ namespace Habit_Tracker_Backend.Services.Interfaces
         Task<LoginResultDto> LoginAsync(LoginDto dto);
         Task<AuthResponseDto> ForgotPasswordAsync(ForgotPasswordDto dto);
         Task<AuthResponseDto> ResetPasswordAsync(ResetPasswordDto dto);
+        Task<AuthResponseDto> SendVerificationEmailAsync(string email);
+        Task<AuthResponseDto> VerifyEmailAsync(VerifyEmailDto dto);
     }
 }

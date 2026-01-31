@@ -1,10 +1,9 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Habit_Tracker_Backend.Models.Classes
 {
-    [Table("HABIT_REMINDER")]
+    [Table("habit_reminder")]
     public class HabitReminder
     {
         [Key]
@@ -19,11 +18,11 @@ namespace Habit_Tracker_Backend.Models.Classes
         [Column("reminder_time")]
         public TimeSpan ReminderTime { get; set; }
 
+        [Required]
         [Column("is_enabled")]
         public bool IsEnabled { get; set; } = true;
 
-        // Navigation
-        [ForeignKey(nameof(HabitId))]
-        public Habit Habit { get; set; } = null!;
+        //[ForeignKey(nameof(HabitId))]
+        //public Habit? Habit { get; set; }   
     }
 }
