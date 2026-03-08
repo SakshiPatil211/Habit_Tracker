@@ -1,13 +1,13 @@
 ﻿using HabitTracker.Data;
 using HabitTracker.DTOs;
-using HabitTracker.Models;        // ✅ Habit entity
+using HabitTracker.Models;        
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;  // ✅ Session
+using Microsoft.AspNetCore.Http;  
 
 namespace HabitTracker.Controllers
 {
-    [ApiController]                     // ✅ REQUIRED
-    [Route("api/habits")]               // ✅ REQUIRED
+    [ApiController]                     
+    [Route("api/habits")]               
     public class HabitController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -56,18 +56,18 @@ namespace HabitTracker.Controllers
             });
         }
 
-        // 🔹 GET ALL HABITS (USER-WISE)
+        //  GET ALL HABITS 
         [HttpGet]
         public IActionResult GetHabits()
         {
-            // 1️⃣ Check session
+            //  Check session
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (userIdStr == null)
                 return Unauthorized("Login required");
 
             long userId = long.Parse(userIdStr);
 
-            // 2️⃣ Fetch habits for logged-in user
+            //  Fetch habits for logged-in user
             var habits = _context.Habits
                 .Where(h => h.UserId == userId && h.IsActive)
                 .Select(h => new HabitResponseDto
@@ -84,32 +84,32 @@ namespace HabitTracker.Controllers
             return Ok(habits);
         }
 
-        // 🔹 UPDATE HABIT
+        //  UPDATE HABIT
         [HttpPut("{habitId}")]
         public IActionResult UpdateHabit(long habitId, UpdateHabitDto dto)
         {
-            // 1️⃣ Check login (SESSION)
+            //  Check login (SESSION)
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (userIdStr == null)
                 return Unauthorized("Login required");
 
             long userId = long.Parse(userIdStr);
 
-            // 2️⃣ Get habit & ownership check
+            //  Get habit & ownership check
             var habit = _context.Habits
                 .FirstOrDefault(h => h.HabitId == habitId && h.UserId == userId);
 
             if (habit == null)
                 return NotFound("Habit not found");
 
-            // 3️⃣ Validate category
+            //  Validate category
             bool categoryExists = _context.HabitCategories
                 .Any(c => c.CategoryId == dto.CategoryId);
 
             if (!categoryExists)
                 return BadRequest("Invalid category");
 
-            // 4️⃣ Prevent duplicate habit name
+            //  Prevent duplicate habit name
             bool duplicateHabit = _context.Habits.Any(h =>
                 h.UserId == userId &&
                 h.HabitName == dto.HabitName &&
@@ -119,7 +119,7 @@ namespace HabitTracker.Controllers
             if (duplicateHabit)
                 return BadRequest("Habit with same name already exists");
 
-            // 5️⃣ Update habit
+            //  Update habit
             habit.HabitName = dto.HabitName;
             habit.CategoryId = dto.CategoryId;
             habit.StartDate = dto.StartDate;
@@ -130,25 +130,25 @@ namespace HabitTracker.Controllers
             return Ok("Habit updated successfully");
         }
 
-        // 🔹 DELETE HABIT (SOFT DELETE)
+        // DELETE HABIT (SOFT DELETE)
         [HttpDelete("{habitId}")]
         public IActionResult DeleteHabit(long habitId)
         {
-            // 1️⃣ Check login (SESSION)
+            //  Check login (SESSION)
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (userIdStr == null)
                 return Unauthorized("Login required");
 
             long userId = long.Parse(userIdStr);
 
-            // 2️⃣ Get habit & ownership check
+            //  Get habit & ownership check
             var habit = _context.Habits
                 .FirstOrDefault(h => h.HabitId == habitId && h.UserId == userId);
 
             if (habit == null)
                 return NotFound("Habit not found");
 
-            // 3️⃣ Soft delete
+            //  Soft delete
             habit.IsActive = false;
 
             _context.SaveChanges();
@@ -197,3 +197,4 @@ namespace HabitTracker.Controllers
 
     }
 }
+
